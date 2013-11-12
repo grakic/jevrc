@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>JEvrc Applet Demo</title>
+<style type="text/css">
+body {
+   font-family: sans-serif;
+   padding: 30px;
+}
+#evrc {
+   width: 640px;
+   height: 320px;
+   margin: 0 auto;
+   border: 1px solid #ccc;
+   border-radius: 15px;
+   box-shadow: 3px 3px 3px #ccc;
+   overflow: hidden;
+}
+#evrc h1, #evrc small {
+    padding: 20px;
+    padding-left: 260px;
+}
+#evrc small {
+    word-wrap: break-word;
+    color: #aaa;
+    font-size: 8pt;
+    display: block;
+}
+</style>
+<!--[if lt IE 8]> <script src="//cdnjs.cloudflare.com/ajax/libs/json2/20121008/json2.min.js"></script> <![endif]-->
+<script type="text/javascript" src="https://www.java.com/js/deployJava.js"></script>
+<script type="text/javascript">
+var modelNode;
+var infoNode;
+
+function inserted(info) {
+  infoNode.innerHTML = info;
+
+  evrcInfo = JSON.parse(info);
+  modelNode.innerHTML = evrcInfo.vehicle.commercial_description;
+}
+function removed() {
+  infoNode.innerHTML = "";
+  modelNode.innerHTML = "";
+}
+
+window.onload = function() {
+    modelNode = document.getElementById("model");
+    infoNode = document.getElementById("info");
+
+//    Mozilla Bug 606737 workaround
+//    var applet = document.getElementById("jfreesteel-eidapplet");
+//    applet.setupJSObject();
+}
+</script>
+</head>
+<body>
+
+<script type="text/javascript">
+    var attributes = {
+        code: 'net.devbase.jevrc.applet.EvrcApplet.class',
+        codebase: './target/',
+        archive: 'evrcapplet-1.0-SNAPSHOT.jar',
+        width: 1,
+        height: 1,
+        mayscript: 'true',
+        id: 'jevrc-evrcapplet'
+    };
+    var parameters = {
+        RemovedCallback: 'removed',
+        InsertedCallback: 'inserted',
+        Permissions: 'all-permissions'
+    };
+    deployJava.runApplet(attributes, parameters, '1.6');
+</script>
+
+<div id="evrc">
+  <h1 id="model"></h1>
+  <small id="info"></small>
+</div>
+
+</body>
+</html>
