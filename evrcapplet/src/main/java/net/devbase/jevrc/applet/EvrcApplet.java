@@ -1,27 +1,23 @@
 package net.devbase.jevrc.applet;
 
 import java.applet.Applet;
-
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
-import java.util.Properties;
 
 import javax.smartcardio.CardTerminal;
 import javax.smartcardio.TerminalFactory;
+
 import net.devbase.jevrc.Reader;
 import net.devbase.jevrc.Reader.ReaderListener;
 import net.devbase.jevrc.EvrcCard;
 import net.devbase.jevrc.EvrcInfo;
 
-import java.io.ByteArrayOutputStream;
-import javax.xml.bind.DatatypeConverter;
 import netscape.javascript.JSObject;
-import org.json.simple.JSONObject;
 
+@SuppressWarnings("restriction")
 public class EvrcApplet extends Applet implements ReaderListener {
 
-    private static final long serialVersionUID = -8975515949350240507L;
+    private static final long serialVersionUID = 8162139504713679711L;
+
     JSObject window = null;
     EvrcCard card = null;
     String removedCallback = "removed";

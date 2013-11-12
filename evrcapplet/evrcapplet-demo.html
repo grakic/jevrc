@@ -34,6 +34,7 @@ var modelNode;
 var infoNode;
 
 function inserted(info) {
+  console.log("inserted");
   infoNode.innerHTML = info;
 
   evrcInfo = JSON.parse(info);
@@ -49,7 +50,7 @@ window.onload = function() {
     infoNode = document.getElementById("info");
 
 //    Mozilla Bug 606737 workaround
-//    var applet = document.getElementById("jfreesteel-eidapplet");
+//    var applet = document.getElementById("jevrc-evrcapplet");
 //    applet.setupJSObject();
 }
 </script>
