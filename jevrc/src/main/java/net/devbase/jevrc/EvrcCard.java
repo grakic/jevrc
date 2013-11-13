@@ -20,9 +20,9 @@ import net.devbase.jevrc.tlv.Utils;
 @SuppressWarnings("restriction") // Various javax.smartcardio.*
 public class EvrcCard {
 
-	private Card card;
-	private CardChannel channel;
-	
+    private Card card;
+    private CardChannel channel;
+    
     public EvrcCard(final Card card)
             throws IllegalArgumentException, SecurityException, IllegalStateException {
 
@@ -37,11 +37,11 @@ public class EvrcCard {
 
     private static final int BLOCK_SIZE = 0x20;
     
-	private byte[] mergeByteArrays(byte[] first, byte[] second) {
-		byte[] result = Arrays.copyOf(first, first.length + second.length);
-		System.arraycopy(second, 0, result, first.length, second.length);
-		return result;
-	}
+    private byte[] mergeByteArrays(byte[] first, byte[] second) {
+        byte[] result = Arrays.copyOf(first, first.length + second.length);
+        System.arraycopy(second, 0, result, first.length, second.length);
+        return result;
+    }
     
     /**
      * Read EF contents, selecting by file path.
@@ -65,20 +65,20 @@ public class EvrcCard {
 
         int HEADER_LENGTH_OFFSET = 21;
         
-		int lenByteSize = 1;
-		if ((header[HEADER_LENGTH_OFFSET] & 0x80) == 0x80) {
-			lenByteSize += (0x7F & header[HEADER_LENGTH_OFFSET]);
-		}
-		if (lenByteSize > 1) {
-			lenByteSize--;
-			HEADER_LENGTH_OFFSET++;
-		}
-		byte[] lenBytes = Arrays.copyOfRange(header, HEADER_LENGTH_OFFSET, HEADER_LENGTH_OFFSET + lenByteSize);		
-		int length = Utils.bytes2IntLE(lenBytes);
-		int dataLength = length+HEADER_LENGTH_OFFSET+lenByteSize;
-		
+        int lenByteSize = 1;
+        if ((header[HEADER_LENGTH_OFFSET] & 0x80) == 0x80) {
+            lenByteSize += (0x7F & header[HEADER_LENGTH_OFFSET]);
+        }
+        if (lenByteSize > 1) {
+            lenByteSize--;
+            HEADER_LENGTH_OFFSET++;
+        }
+        byte[] lenBytes = Arrays.copyOfRange(header, HEADER_LENGTH_OFFSET, HEADER_LENGTH_OFFSET + lenByteSize);        
+        int length = Utils.bytes2IntLE(lenBytes);
+        int dataLength = length+HEADER_LENGTH_OFFSET+lenByteSize;
+        
         // Read binary into buffer
-		return mergeByteArrays(header, readBinary(BLOCK_SIZE, dataLength-BLOCK_SIZE));
+        return mergeByteArrays(header, readBinary(BLOCK_SIZE, dataLength-BLOCK_SIZE));
     }
 
     /** Reads the content of the selected file starting at offset, at most length bytes */
@@ -111,33 +111,33 @@ public class EvrcCard {
     
     private void selectAid() throws CardException {
 
-    	byte[] df1 = {
-			(byte) 0xA0, (byte) 0x00, (byte) 0x00, (byte) 0x00, 
-			(byte) 0x03, (byte) 0x00, (byte) 0x00, (byte) 0x00
-    	};
-    	
-    	byte[] df2 = {
-			(byte) 0xF3, (byte) 0x81, (byte) 0x00, (byte) 0x00,
-			(byte) 0x02, (byte) 0x53, (byte) 0x45, (byte) 0x52,
-			(byte) 0x56, (byte) 0x4C, (byte) 0x04, (byte) 0x02,
-			(byte) 0x01
-    	};
-    	
-    	byte[] aid = {
-        	(byte) 0xA0, (byte) 0x00, (byte) 0x00, (byte) 0x00,
-        	(byte) 0x77, (byte) 0x01, (byte) 0x08, (byte) 0x00, 
-        	(byte) 0x07, (byte) 0x00, (byte) 0x00, (byte) 0xFE, 
-        	(byte) 0x00, (byte) 0x00, (byte) 0xAD, (byte) 0xF2
-        };    	
+        byte[] df1 = {
+            (byte) 0xA0, (byte) 0x00, (byte) 0x00, (byte) 0x00, 
+            (byte) 0x03, (byte) 0x00, (byte) 0x00, (byte) 0x00
+        };
+        
+        byte[] df2 = {
+            (byte) 0xF3, (byte) 0x81, (byte) 0x00, (byte) 0x00,
+            (byte) 0x02, (byte) 0x53, (byte) 0x45, (byte) 0x52,
+            (byte) 0x56, (byte) 0x4C, (byte) 0x04, (byte) 0x02,
+            (byte) 0x01
+        };
+        
+        byte[] aid = {
+            (byte) 0xA0, (byte) 0x00, (byte) 0x00, (byte) 0x00,
+            (byte) 0x77, (byte) 0x01, (byte) 0x08, (byte) 0x00, 
+            (byte) 0x07, (byte) 0x00, (byte) 0x00, (byte) 0xFE, 
+            (byte) 0x00, (byte) 0x00, (byte) 0xAD, (byte) 0xF2
+        };        
 
-    	channel.transmit(new CommandAPDU(0x00, 0xA4, 0x04, 0x00, df1));
+        channel.transmit(new CommandAPDU(0x00, 0xA4, 0x04, 0x00, df1));
         channel.transmit(new CommandAPDU(0x00, 0xA4, 0x04, 0x00, df2));
 
         ResponseAPDU response3 = channel.transmit(new CommandAPDU(0x00, 0xA4, 0x04, 0x0C, aid));
         if(response3.getSW() != 0x9000) {
             throw new CardException(
                 String.format("Select AID with name=%s failed: status=%s\n", 
-            		Utils.bytes2HexString(aid),
+                    Utils.bytes2HexString(aid),
                     Utils.int2HexString(response3.getSW())));
         }
     }
@@ -153,47 +153,47 @@ public class EvrcCard {
     }
     
     public EvrcInfo readEvrcInfo() throws CardException {
-      try {
-        card.beginExclusive();
-    	selectAid();
+        try {
+            card.beginExclusive();
+            selectAid();
 
-    	byte[] data;
-    	
-    	data = readElementaryFile(EF_Registration_A);
-		List<Tlv> tlvs_a = TlvListUtils.parse(data);
+            byte[] data;
 
-		data = readElementaryFile(EF_Registration_B);
-		List<Tlv> tlvs_b = TlvListUtils.parse(data);
+            data = readElementaryFile(EF_Registration_A);
+            List<Tlv> tlvs_a = TlvListUtils.parse(data);
 
-		data = readElementaryFile(EF_Registration_C);
-		List<Tlv> tlvs_c = TlvListUtils.parse(data);
+            data = readElementaryFile(EF_Registration_B);
+            List<Tlv> tlvs_b = TlvListUtils.parse(data);
 
-		data = readElementaryFile(EF_SerbianRegis_D);
-		List<Tlv> tlvs_d = TlvListUtils.parse(data);
+            data = readElementaryFile(EF_Registration_C);
+            List<Tlv> tlvs_c = TlvListUtils.parse(data);
 
-		Map<String, byte[]> dict = new HashMap<String, byte[]>();
-		TlvListUtils.getValuesDict(tlvs_a, dict);
-		TlvListUtils.getValuesDict(tlvs_b, dict);
-		TlvListUtils.getValuesDict(tlvs_c, dict);
-		TlvListUtils.getValuesDict(tlvs_d, dict);
+            data = readElementaryFile(EF_SerbianRegis_D);
+            List<Tlv> tlvs_d = TlvListUtils.parse(data);
 
-		/*
-		for (Map.Entry<String, byte[]> e : dict.entrySet()) {
-			System.out.format("%s = %s\n",
-					e.getKey(), Utils.bytes2HexStringCompact(e.getValue()));
-		}
-		System.exit(0);
-		*/
-		
-		EvrcInfo evrcinfo = new EvrcInfo();
-		evrcinfo.addDocumentData(dict);
-		evrcinfo.addVehicleData(dict);
-		evrcinfo.addPersonalData(dict);
-		return evrcinfo;
-         }
-         finally {
-             card.endExclusive();
-         }
+            Map<String, byte[]> dict = new HashMap<String, byte[]>();
+            TlvListUtils.getValuesDict(tlvs_a, dict);
+            TlvListUtils.getValuesDict(tlvs_b, dict);
+            TlvListUtils.getValuesDict(tlvs_c, dict);
+            TlvListUtils.getValuesDict(tlvs_d, dict);
+
+            /*
+            for (Map.Entry<String, byte[]> e : dict.entrySet()) {
+                System.out.format("%s = %s\n",
+                e.getKey(), Utils.bytes2HexStringCompact(e.getValue()));
+            }
+            System.exit(0);
+            */
+
+            EvrcInfo evrcinfo = new EvrcInfo();
+            evrcinfo.addDocumentData(dict);
+            evrcinfo.addVehicleData(dict);
+            evrcinfo.addPersonalData(dict);
+            return evrcinfo;
+        }
+        finally {
+            card.endExclusive();
+        }
     }
     
     /** Disconnects, but doesn't reset the card. */
