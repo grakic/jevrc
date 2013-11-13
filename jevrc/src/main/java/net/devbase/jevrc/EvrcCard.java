@@ -153,6 +153,8 @@ public class EvrcCard {
     }
     
     public EvrcInfo readEvrcInfo() throws CardException {
+      try {
+        card.beginExclusive();
     	selectAid();
 
     	byte[] data;
@@ -188,6 +190,10 @@ public class EvrcCard {
 		evrcinfo.addVehicleData(dict);
 		evrcinfo.addPersonalData(dict);
 		return evrcinfo;
+         }
+         finally {
+             card.endExclusive();
+         }
     }
     
     /** Disconnects, but doesn't reset the card. */
