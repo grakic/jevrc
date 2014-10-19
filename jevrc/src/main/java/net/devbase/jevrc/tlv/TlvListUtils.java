@@ -38,6 +38,9 @@ public class TlvListUtils {
 
 		while (bytesFrom < bytesTo) {
 			
+			if (data[bytesFrom] == 0x00)
+				break;
+			
 			// get tag size
 			int tagByteSize = 1;
 			if ((data[bytesFrom] & 0x1F) == 0x1F) {
