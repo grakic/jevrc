@@ -9,22 +9,33 @@ body {
 }
 #evrc {
    width: 640px;
-   height: 320px;
    margin: 0 auto;
    border: 1px solid #ccc;
    border-radius: 15px;
    box-shadow: 3px 3px 3px #ccc;
-   overflow: hidden;
 }
-#evrc h1, #evrc small {
+#evrc h1, #info {
     padding: 20px;
-    padding-left: 260px;
+    margin: 0;
 }
-#evrc small {
+#info {
     word-wrap: break-word;
-    color: #aaa;
+    color: #888;
     font-size: 8pt;
-    display: block;
+    height: 320px;
+    overflow: auto;
+    border-top: 1px solid #ccc;
+}
+#info th {
+    min-width: 200px;
+    text-align: right;
+    padding-right: 10px;
+}
+#error {
+    padding: 15px;
+    color: red;
+    border-bottom: 1px solid red;
+    display: none;
 }
 </style>
 <!--[if lt IE 8]> <script src="//cdnjs.cloudflare.com/ajax/libs/json2/20121008/json2.min.js"></script> <![endif]-->
@@ -32,22 +43,35 @@ body {
 <script type="text/javascript">
 var modelNode;
 var infoNode;
+var errorNode;
 
+function show(object) {
+  var html = "";
+  for (var property in object) 
+     html += "<tr><th>"+property+"</th><td>"+object[property]+"</td></tr>";
+  return "<table>" + html + "</table>";
+}
 function inserted(info) {
-  console.log("inserted");
-  infoNode.innerHTML = info;
-
   evrcInfo = JSON.parse(info);
   modelNode.innerHTML = evrcInfo.vehicle.commercial_description;
+  var html = "<b>Document</b>" + show(evrcInfo['document']) +
+             "<b>Personal</b>" + show(evrcInfo['personal']) +
+             "<b>Vehicle</b>"  + show(evrcInfo['vehicle']); 
+  console.log(html);
+  infoNode.innerHTML = html;
 }
 function removed() {
   infoNode.innerHTML = "";
   modelNode.innerHTML = "";
 }
-
+function onerror(msg) {
+  errorNode.innerHTML = msg;
+  errorNode.style.display = "block";
+}
 window.onload = function() {
     modelNode = document.getElementById("model");
     infoNode = document.getElementById("info");
+    errorNode = document.getElementById("error");
 
 //    Mozilla Bug 606737 workaround
 //    var applet = document.getElementById("jevrc-evrcapplet");
@@ -70,14 +94,16 @@ window.onload = function() {
     var parameters = {
         RemovedCallback: 'removed',
         InsertedCallback: 'inserted',
+        ErrorCallback: 'onerror',
         Permissions: 'all-permissions'
     };
     deployJava.runApplet(attributes, parameters, '1.6');
 </script>
 
 <div id="evrc">
+  <div id="error"></div>
   <h1 id="model"></h1>
-  <small id="info"></small>
+  <div id="info"></div>
 </div>
 
 </body>
