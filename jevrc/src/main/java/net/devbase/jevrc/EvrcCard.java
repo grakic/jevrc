@@ -36,6 +36,13 @@ public class EvrcCard {
     private static final byte[] EF_SerbianRegis_D = {(byte) 0xD0, (byte) 0x31};
 
     private static final int BLOCK_SIZE = 0x64;
+
+    private enum Country {
+        SERBIA,
+        EU
+    }
+
+    private Country currentCountry;
     
     private byte[] mergeByteArrays(byte[] first, byte[] second) {
         byte[] result = Arrays.copyOf(first, first.length + second.length);
@@ -125,8 +132,10 @@ public class EvrcCard {
 			response = channel.transmit(new CommandAPDU(0x00, 0xA4, 0x04, 0x0C,
 				Utils.asByteArray(0xA0, 0x00, 0x00, 0x00, 0x77, 0x01, 0x08, 0x00, 0x07, 0x00, 0x00, 0xFE, 0x00, 0x00, 0xAD, 0xF2)));
 	
-        	if (response.getSW() == 0x9000)
-        		return;
+        	if (response.getSW() == 0x9000) {
+        	    specifyCurrentCountry(Country.SERBIA);
+        	    return;
+            }
     	}
     	
     	// Serbian eVRC AID, second guess
@@ -140,8 +149,10 @@ public class EvrcCard {
 			response = channel.transmit(new CommandAPDU(0x00, 0xA4, 0x04, 0x0C,
 					Utils.asByteArray(0xA0, 0x00, 0x00, 0x00, 0x77, 0x01, 0x08, 0x00, 0x07, 0x00, 0x00, 0xFE, 0x00, 0x00, 0xAD, 0xF2)));
 			
-        	if (response.getSW() == 0x9000)
-        		return;
+        	if (response.getSW() == 0x9000) {
+        	    specifyCurrentCountry(Country.SERBIA);
+        	    return;
+            }
     	}
     	
     	// Serbian eVRC AID, third guess
@@ -155,16 +166,20 @@ public class EvrcCard {
 			response = channel.transmit(new CommandAPDU(0x00, 0xA4, 0x04, 0x0C,
 					Utils.asByteArray(0xA0, 0x00, 0x00, 0x00, 0x18, 0x65, 0x56, 0x4C, 0x2D, 0x30, 0x30, 0x31)));
 			
-        	if (response.getSW() == 0x9000)
-        		return;
+        	if (response.getSW() == 0x9000) {
+                specifyCurrentCountry(Country.SERBIA);
+                return;
+            }
     	}
 
     	// EU eVRC AID
     	response = channel.transmit(new CommandAPDU(0x00, 0xA4, 0x04, 0x0C, 
         		Utils.asByteArray(0xA0, 0x00, 0x00, 0x04, 0x56, 0x45, 0x56, 0x52, 0x2D, 0x30, 0x31)));
 		
-    	if (response.getSW() == 0x9000)
-    		return;
+    	if (response.getSW() == 0x9000) {
+    	    specifyCurrentCountry(Country.EU);
+            return;
+        }
 
         throw new CardException(
             String.format("Select AID for card ATR=%s failed: status=%s\n", 
@@ -181,7 +196,11 @@ public class EvrcCard {
                     Utils.bytes2HexString(name), Utils.int2HexString(response.getSW())));
         }
     }
-    
+
+    private void specifyCurrentCountry(Country currentCountry) {
+        this.currentCountry = currentCountry;
+    }
+
     public EvrcInfo readEvrcInfo() throws CardException {
         try {
             card.beginExclusive();
@@ -189,23 +208,25 @@ public class EvrcCard {
 
             byte[] data;
 
+            Map<String, byte[]> dict = new HashMap<String, byte[]>();
+
             data = readElementaryFile(EF_Registration_A);
             List<Tlv> tlvs_a = TlvListUtils.parse(data);
+            TlvListUtils.getValuesDict(tlvs_a, dict);
 
             data = readElementaryFile(EF_Registration_B);
             List<Tlv> tlvs_b = TlvListUtils.parse(data);
+            TlvListUtils.getValuesDict(tlvs_b, dict);
 
             data = readElementaryFile(EF_Registration_C);
             List<Tlv> tlvs_c = TlvListUtils.parse(data);
-
-            data = readElementaryFile(EF_SerbianRegis_D);
-            List<Tlv> tlvs_d = TlvListUtils.parse(data);
-
-            Map<String, byte[]> dict = new HashMap<String, byte[]>();
-            TlvListUtils.getValuesDict(tlvs_a, dict);
-            TlvListUtils.getValuesDict(tlvs_b, dict);
             TlvListUtils.getValuesDict(tlvs_c, dict);
-            TlvListUtils.getValuesDict(tlvs_d, dict);
+
+            if(getCurrentCountry() == Country.SERBIA) {
+                data = readElementaryFile(EF_SerbianRegis_D);
+                List<Tlv> tlvs_d = TlvListUtils.parse(data);
+                TlvListUtils.getValuesDict(tlvs_d, dict);
+            }
 
             /*
             for (Map.Entry<String, byte[]> e : dict.entrySet()) {
@@ -224,6 +245,10 @@ public class EvrcCard {
         finally {
             card.endExclusive();
         }
+    }
+
+    private Country getCurrentCountry() {
+        return currentCountry;
     }
     
     /** Disconnects, but doesn't reset the card. */
